@@ -144,22 +144,32 @@ const searchUser = async (username) => {
       let repos = [];
       let page = 1;
       const per_page = 100; // max limit
-  
-      while (true) {
-          const response = await fetch(`https://api.github.com/users/${username}/repos?client_id=${client_id}&client_secret=${client_secret}&page=${page}&per_page=${per_page}`);
-          const data = await response.json();
-          if (data.length === 0) break; // no more data to fetch
-          repos = repos.concat(data);
-          page++;
+      let totalPages = 1;
+    
+      while (page <= totalPages) {
+        const response = await fetch(`https://api.github.com/users/${username}/repos?client_id=${client_id}&client_secret=${client_secret}&page=${page}&per_page=${per_page}`);
+        const data = await response.json();
+    
+        if (response.headers.has('link')) {
+          const linkHeader = response.headers.get('link');
+          const matches = linkHeader.match(/<([^>]+)>;\s*rel="last"/);
+          if (matches) {
+            totalPages = parseInt(new URL(matches[1]).searchParams.get('page'), 10);
+          }
+        }
+    
+        repos = repos.concat(data);
+        page++;
       }
-  
+    
       return repos;
-  }
-  
-  const [responseProfileData, responseReposData] = await Promise.all([
+    }
+    
+    const [responseProfileData, responseReposData] = await Promise.all([
       fetch(`https://api.github.com/users/${username}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`),
       fetchAllRepos(username, CLIENT_ID, CLIENT_SECRET)
-  ]);
+    ]);
+    
   
     if (!responseProfileData.ok) throw new Error(responseProfileData.status);
     const profileData = await responseProfileData.json();
