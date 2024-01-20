@@ -13,9 +13,7 @@ const reposContainer = document.querySelector("#repos");
 const pagination = document.querySelector("#pagination");
 const CLIENT_ID = "00846d991c108086334f";
 const CLIENT_SECRET = "70790f0f99edc910a3b36767dbc9d18ccbd0e4de";
-// document.getElementsByClassName("inputx")[0].addEventListener("change",function(){
-  
-// });
+
 document.querySelector('.inputxx')?.addEventListener('change', function(){
   searchUser(searchInput.value || "Ashwani2529");
 });
@@ -28,16 +26,8 @@ const displayReposData = (pageNumber, repos) => {
       '<p class="repos-not-found">Repositories not Found</p>';
     return;
   }
-  // document.querySelector('.inputxx')?.addEventListener('change', rrr);
-  // function rrr=(){
-  //   console.log("fhb")
-  //   searchUser();
-  // }
   let noofrepos= document.getElementsByClassName("inputxx")[0].value ||10
-  // const noofrepos= 10;
-  // console.log(repos)
   const pagesAmount = Math.ceil(repos.length/noofrepos);
-  // console.log(pagesAmount)
   const start = (pageNumber - 1) * noofrepos;
 
   repos
@@ -65,7 +55,7 @@ const displayReposData = (pageNumber, repos) => {
         <span class="color" style="background-color: ${
           languageColors[language]
         };"></span>
-        ${language ?? "Desconhecido"}
+        ${language ?? "Unknown"}
       </div>
     </footer>
   </a>`;
@@ -111,7 +101,7 @@ const removeNotFoundError = () => {
 };
 
 const displayNotFoundError = () => {
-  userName.textContent = "Usuário não encontrado";
+  userName.textContent = "User not found";
   userAvatar.src =
     "https://cdn3.iconfinder.com/data/icons/flat-pro-user-management-set-4/32/user-unknown-512.png";
 
@@ -150,19 +140,30 @@ const searchUser = async (username) => {
   activeLoading();
 
   try {
-    const [responseProfileData, responseReposData] = await Promise.all([
-      fetch(
-        `https://api.github.com/users/${username}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`
-      ),
-      fetch(
-        `https://api.github.com/users/${username}/repos?sort=created:ascclient_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`
-      ),
-    ]);
-
+    async function fetchAllRepos(username, client_id, client_secret) {
+      let repos = [];
+      let page = 1;
+      const per_page = 100; // max limit
+  
+      while (true) {
+          const response = await fetch(`https://api.github.com/users/${username}/repos?client_id=${client_id}&client_secret=${client_secret}&page=${page}&per_page=${per_page}`);
+          const data = await response.json();
+          if (data.length === 0) break; // no more data to fetch
+          repos = repos.concat(data);
+          page++;
+      }
+  
+      return repos;
+  }
+  
+  const [responseProfileData, responseReposData] = await Promise.all([
+      fetch(`https://api.github.com/users/${username}?client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`),
+      fetchAllRepos(username, CLIENT_ID, CLIENT_SECRET)
+  ]);
+  
     if (!responseProfileData.ok) throw new Error(responseProfileData.status);
-
     const profileData = await responseProfileData.json();
-    const reposData = await responseReposData.json();
+    const reposData = responseReposData;
     const orderedRepos = [...reposData].sort(orderRepos);
 
     if (info.querySelector("#not-found-img")) removeNotFoundError();

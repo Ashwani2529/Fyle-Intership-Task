@@ -26,7 +26,9 @@ body {
   display: grid;
   place-items: center;
 }
-
+/* #pages{
+  width: 100%;
+} */
 h1 {
   text-align: center;
   color: var(--base-1);
@@ -294,13 +296,15 @@ button:active {
 }
 
 .pagination {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
   align-items: center;
   gap: 1.2rem;
   margin-top: 2.4rem;
 }
 
 .pagination .page-number {
+  margin: 0;
   border-radius: 0.8rem;
   border: 1px solid var(--primary);
   color: var(--white);
@@ -309,7 +313,6 @@ button:active {
   width: 3.2rem;
   height: 3.2rem;
   cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
